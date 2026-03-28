@@ -6,7 +6,7 @@ export default function BigSaleBanner() {
     <View className="mx-4 my-4">
       <TouchableOpacity className="rounded-xl overflow-hidden relative shadow-lg">
         <Image
-          source={require("@/assets/images/banners/6.jpg")}
+          source={require("@/assets/images/banners/w4.jpg")}
           style={{ width: "100%", height: "190px" }}
           resizeMode="cover"
         />

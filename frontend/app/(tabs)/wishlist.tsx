@@ -1,7 +1,6 @@
 import React from "react";
-import { StatusBar, StyleSheet, Text, View, Image } from "react-native";
+import { StatusBar, Text, View, Image } from "react-native";
 import { useStore } from "@/store";
-import ShopCard from "@/components/cards/shop.card";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
@@ -78,66 +77,58 @@ onPress={()=>router.push("/(tabs)")}
 
 <ScrollView className="flex-1" showsVerticalScrollIndicator={false} >
 {/* Render wishlist items */}
-<View className="px-4 py-6">
+<View className="px-2 py-0">
 {wishlist.map((product,index) => (
-   <View key={product.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-4 overflow-hidden">
-    <View className="p-4">
-      <View className="flex-row">
-       {/*Product Image*/}
-       <TouchableOpacity 
-       className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden mr-4"
-       onPress={() => handleProductPress(product)}
-       >
-        <Image
+  <View key={product.id} className="flex-row bg-white rounded-2xl shadow-md border border-gray-100 mb-4 overflow-hidden items-center">
+    <TouchableOpacity
+      className="w-20 h-20 bg-gray-100 overflow-hidden rounded-lg ml-3"
+      onPress={() => handleProductPress(product)}
+    >
+      <Image
         source={{
-          uri: product.image && product.image.trim() !== "" 
-            ? product.image 
+          uri: product.image && product.image.trim() !== ""
+            ? product.image
             : "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60"
         }}
-        style={{ width: 80, height: 80 }}
+        style={{ width: 80, height: 80, marginLeft:10 ,borderRadius: 8 }}
         resizeMode="cover"
-        />
-       </TouchableOpacity>
-
-{/**Product Details */}
-<View className="flex-1">
-  <TouchableOpacity onPress={() => handleProductPress(product)}>
-    <Text className="text-lg font-poppins-semibold text-gray-900 mb-2" numberOfLines={2}>
-      {product.title}
-    </Text>
-  </TouchableOpacity>
-
-  {/*Price*/}
-  <Text className="text-xl font-poppins-semibold text-blue-600 mb-4">
-    ${product.price}
-  </Text>
-   
-  {/*Actions Buttons*/}
-  <View className="flex-row items-center justify-between">
-   <TouchableOpacity
-   className="bg-blue-600 px-6 py-3 rounded-xl flex-1 mr-3"
-   onPress={()=> handleAddToCart(product)}
-   >
-    <Text className="text-white font-poppins-semibold text-center">Add to Cart</Text>
-   </TouchableOpacity>
-
-    <TouchableOpacity
-    className="px-4 py-3"
-    onPress={()=> handleRemoveFromWishlist(product.id)}
-    >
-      <View className="flex-row items-center">
-        <Ionicons name="close" size={16} color="#EF4444" />
-        <Text className="text-red-500 font-poppins-semibold ml-1">Remove</Text>
-      </View>
+      />
     </TouchableOpacity>
 
-  </View>
+    <View className="flex-1 px-3 py-2 justify-between">
+      <View>
+        <TouchableOpacity onPress={() => handleProductPress(product)}>
+          <Text className="text-lg font-poppins-semibold text-gray-900" numberOfLines={2}>
+            {product.title}
+          </Text>
+        </TouchableOpacity>
 
-</View>
+        <Text className="text-sm text-gray-500 mt-1 mb-2" numberOfLines={1}>
+          Premium item
+        </Text>
 
+        <Text className="text-xl font-poppins-semibold text-blue-600">
+          ${Number(product.price).toFixed(2)}
+        </Text>
       </View>
-</View>
-   </View>
+
+      <View className="flex-row items-center justify-between mt-3">
+        <TouchableOpacity
+          className="flex-1 bg-blue-600 px-4 py-2 rounded-xl mr-2"
+          onPress={() => handleAddToCart(product)}
+        >
+          <Text className="text-white font-poppins-semibold text-sm text-center">Add to Cart</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="border border-red-100 px-4 py-2 rounded-xl"
+          onPress={() => handleRemoveFromWishlist(product.id)}
+        >
+          <Text className="text-red-500 font-poppins-semibold text-sm">Remove</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
 ))}
 </View>
 
@@ -147,6 +138,4 @@ onPress={()=>router.push("/(tabs)")}
 
    </SafeAreaView>
   );
-
-const styles = StyleSheet.create({});
 }
