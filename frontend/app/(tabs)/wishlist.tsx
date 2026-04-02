@@ -106,7 +106,7 @@ onPress={()=>router.push("/(tabs)")}
         <Text className="text-sm text-gray-500 mt-1 mb-2" numberOfLines={1}>
           Premium item
         </Text>
-
+  
         <Text className="text-xl font-poppins-semibold text-blue-600">
           ${Number(product.price).toFixed(2)}
         </Text>
