@@ -19,6 +19,7 @@ export default function TabLayout() {
       : Colors[colorScheme ?? "light"].tint;
 
   const { wishlist, cart } = useStore();
+  const {totalUnread} = useUnreadMessages();
 
   return (
     <Tabs
@@ -70,7 +71,16 @@ export default function TabLayout() {
         options={{
           title: "Messages",
           tabBarIcon: ({ color, size }) => (
+            <View className="relative">
             <AntDesign name="message" size={size} color={color} />
+            {totalUnread > 0 && (
+  <View className="absolute -top-2 -right-2 bg-red-500 rounded-full px-1.5">
+    <Text className="text-white text-xs font-bold">
+      {totalUnread > 99 ? "99+" : totalUnread}
+    </Text>
+  </View>
+)}
+</View>
           ),
         }}
       />

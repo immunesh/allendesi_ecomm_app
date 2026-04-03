@@ -206,8 +206,135 @@ setPage(nextPage);
 setHasMore(res.data.hasMore);
 }; 
 
+const pickImage = async () => {
+  try {
+    // Request permissions
+    const { status } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-   
+    if (status !== "granted") {
+     toast.error(
+         "Please grant permission to access your photo library"
+      );
+      return;
+    }
+
+    // Launch image picker
+const result = await ImagePicker.launchImageLibraryAsync({
+  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  allowsEditing: true,
+  aspect: [4, 3],
+  quality: 0.8,
+});
+
+
+if (!result.canceled && result.assets[0]) {
+  await handleImageUpload(result.assets[0].uri);
+} catch (error) {
+  console.error('Error picking image:', error);
+  toast.error('Failed to pick image');
+}
+  };
+
+  const handleImageUpload = async (imageUri: string) => {
+  if (!conversationId || !currentConversation) return;
+
+  setIsUploading(true);
+  try {
+    // Create form data
+    const formData = new FormData();
+    formData.append('image', {
+      uri: imageUri,
+      type: 'image/jpeg',
+      name: 'chat-image.jpg',
+    } as any);
+
+    // Upload image to your server
+const uploadResponse = await axiosInstance.post('/upload/chat-image', formData, {
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+});
+
+const imageUrl = uploadResponse.data.imageUrl;
+
+// Send image message via WebSocket
+const payload = {
+  fromUserId: user?.id,
+  toUserId: currentConversation.seller.id,
+  messageBody: "🖼️ Image",
+  conversationId: conversationId,
+  senderType: "user",
+  imageUrl: imageUrl,
+  messageType: "image",
+};
+
+ws?.send(JSON.stringify(payload));
+
+// Optimistically add message to UI
+const newMessage = {
+  id: Date.now().toString(),
+  content: "🖼️ Image",
+  senderType: "user" as const,
+  seen: false,
+  createdAt: new Date().toISOString(),
+  imageUrl: imageUrl,
+  messageType: "image" as const,
+};
+
+queryClient.setQueryData(["messages", conversationId], (old: any = []) => [
+  ...old,
+  newMessage,
+]);
+
+// Update conversation list
+queryClient.setQueryData(["conversations"], (old: any = []) =>
+  old.map((conv: Conversation) =>
+    conv.conversationId === conversationId
+      ? {
+          ...conv,
+          lastMessage: "🖼️ Image",
+          lastMessageAt: new Date().toISOString(),
+        }
+      : conv
+  )
+);
+
+scrollToBottom();
+toast.success('Image sent successfully');
+
+} catch (error) {
+  console.error('Error uploading image:', error);
+toast.error('Failed to send image');
+} finally {
+  setIsUploading(false);
+}
+};
+
+
+const handleSendMessage = async () => {
+  if (!messageText.trim() || !conversationId || !currentConversation) return;
+
+  // Send via WebSocket immediately
+  const payload = {
+    fromUserId: user?.id,
+    toUserId: currentConversation.seller.id,
+    messageBody: messageText.trim(),
+    conversationId: conversationId,
+    senderType: "user",
+    messageType: "text",
+  };
+  ws?.send(JSON.stringify(payload))   
+
+  //clear input immediately
+  setMessageText("");
+};
+
+const handleEmojiSelect = (emoji: any) => {
+  setMessageText((prev) => prev + emoji.emoji);
+  setShowEmojiPicker(false);
+};
+
 
 if (!currentConversation) {
   return (
@@ -364,6 +491,34 @@ if (!currentConversation) {
 </TouchableOpacity>
    
 
+   <TouchableOpacity
+  className="mr-3"
+  onPress={() => setShowEmojiPicker(true)}
+>
+  <Ionicons name="happy-outline" size={24} color="#6B7280" />
+</TouchableOpacity>
+
+<View className="flex-1 bg-gray-100 rounded-full px-4 py-2 mr-3">
+<TextInput
+  ref={messageInputRef}
+  placeholder="Type your message..."
+  value={messageText}
+  onChangeText={setMessageText}
+  className="font-poppins-medium text-gray-900"
+  multiline
+  maxLength={1000}
+  onSubmitEditing={handleSendMessage}
+/>
+</View>
+<TouchableOpacity
+  className="bg-blue-600 w-10 h-10 rounded-full items-center justify-center"
+  onPress={handleSendMessage}
+  disabled={!messageText.trim()}
+>
+  <Ionicons name="send" size={18} color="white" />
+</TouchableOpacity>
+</View>
+</KeyboardAvoidingView>
 </SafeAreaView> 
   );
 }
