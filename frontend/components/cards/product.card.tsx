@@ -1,6 +1,10 @@
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { toast } from 'react-toastify';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { toast } from 'react-native-toast-message';
+import { useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import useUser from '@/hooks/useUser';
+import { useStore } from '@/store';
 
 interface ProductCardProps {
   product: any;
@@ -9,15 +13,12 @@ interface ProductCardProps {
 
 export default function ProductCard({product, showActions = true}: ProductCardProps) {
     const { wishlist, addToWishlist, removeFromWishlist } = useStore();
-const { user } = useUser();
+    const { user } = useUser();
+    const router = useRouter();
 
 const handleProductPress = (product: any) => {
-  router.push({
-    pathname: "/(routes)/product/[id]",
-    params: {
-      id: product.slug || product.id,
-    },
-  });
+  const productId = product.id;
+  router.push(`/product/${productId}`);
 };
 
 const handleWishlistToggle = (product: any, e: any) => {
@@ -28,7 +29,7 @@ const handleWishlistToggle = (product: any, e: any) => {
     return;
   }
 
-  const isInWishlist = wishlist.some((item) => item.id === product.id);
+  const isInWishlist = wishlist.some((item: any) => item.id === product.id);
 
   if (isInWishlist) {
     removeFromWishlist(product.id, user, null, "Mobile App");
@@ -52,7 +53,7 @@ toast.success("Added to wishlist");
 };
 
 const isInWishlist = (productId: string) => {
-  return wishlist.some((item) => item.id === productId);
+  return wishlist.some((item: any) => item.id === productId);
 };
 
 const discountPercentage = product?.sale_price
@@ -70,7 +71,85 @@ const discountPercentage = product?.sale_price
 onPress={() => handleProductPress(product)}
 activeOpacity={0.9}
 >
-  <Text>ProductCard</Text>
+ 
+  {/* Product Image */}
+<View className="relative">
+  <Image
+    source={{
+      uri:
+        product.images?.[0]?.url ||
+        "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=400&q=80",
+    }}
+    className="w-full h-32 bg-gray-100"
+    resizeMode="cover"
+  />
+
+
+{/* Action Icons */}
+{showActions && (
+  <View className="absolute top-2 right-2 space-y-1">
+    <TouchableOpacity
+      className="w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full"
+      onPress={(e) => handleWishlistToggle(product, e)}
+      activeOpacity={0.7}
+    >
+      <Ionicons
+        name={isInWishlist(product.id) ? "heart" : "heart-outline"}
+        size={16}
+        color={isInWishlist(product.id) ? "#EF4444" : "#EF4444"}
+      />
+    </TouchableOpacity>
+  </View>
+)}
+
+{/* Discount Badge */}
+{discountPercentage > 0 && (
+  <View className="absolute top-2 left-2 bg-red-500 px-1.5 py-0.5 rounded-full">
+    <Text className="text-white text-xs font-bold">
+      -{discountPercentage}%
+    </Text>
+  </View>
+)}
+
+ </View>
+
+ {/* Product Info */}
+ <View className="p-3">
+  <Text className="text-xs text-gray-500 font-poppins-medium mb-1" numberOfLines={1}>
+    {product.Shop?.name || "Shop Name"}
+  </Text>
+
+  <Text className="text-sm font-poppins-semibold text-gray-900 mb-1" numberOfLines={1}>
+    {product.title}
+  </Text>
+</View>
+
+{/* Rating */}
+<View className="flex-row items-center mb-1">
+  <Ionicons name="star" size={10} color="#FCD34D" />
+  <Text className="text-xs font-poppins-medium text-gray-700 ml-1">
+    {product.ratings || 0}
+  </Text>
+</View>
+
+{/* Price */}
+<View className="flex-row items-center mb-1">
+  <Text className="text-base font-poppins-bold text-blue-600">
+    ${product.sale_price || product.regular_price}
+  </Text>
+
+  {product.sale_price && product.regular_price && (
+    <Text className="text-xs text-gray-400 line-through ml-1">
+      ${product.regular_price}
+    </Text>
+  )}
+</View>
+
+{/* Sales Count */}
+<Text className="text-xs text-gray-500 font-poppins-medium">
+  {product.totalSales || 0} sold
+</Text>
 </TouchableOpacity>
+
   );
 }

@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { toast } from "react-toastify";
+import Toast from "react-native-toast-message";
 
 interface ChangePasswordFormData {
   currentPassword: string;
@@ -67,16 +67,16 @@ export default function ChangePassword() {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Password changed successfully");
+      showSuccessToast("Password changed successfully");
       form.reset();
       router.back();
     },
     onError: (error) => {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Failed to change password");
+        showErrorToast(error.response?.data?.message || "Failed to change password");
         return;
       }
-      toast.error("Failed to change password");
+      showErrorToast("Failed to change password");
     },
   });
 
@@ -89,27 +89,27 @@ export default function ChangePassword() {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Password reset successfully");
+      showSuccessToast("Password reset successfully");
       form.reset();
-      router.replace("/(routes)/login");
+      router.replace("/login");
     },
     onError: (error) => {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Failed to reset password");
+        showErrorToast(error.response?.data?.message || "Failed to reset password");
         return;
       }
-      toast.error("Failed to reset password");
+      showErrorToast("Failed to reset password");
     },
   });
 
   const onSubmit = (data: ChangePasswordFormData) => {
     if (data.newPassword !== data.confirmPassword) {
-      toast.error("New password and confirm password must match");
+      showErrorToast("New password and confirm password must match");
       return;
     }
 
     if (!isResetMode && data.currentPassword === data.newPassword) {
-      toast.error("New password must be different from current password");
+      showErrorToast("New password must be different from current password");
       return;
     }
 

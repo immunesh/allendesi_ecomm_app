@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { toast } from "react-toastify";
+import Toast from "react-native-toast-message";
 
 interface VerifyOTPData {
   name: string;
@@ -68,7 +68,7 @@ export default function SignupOtp() {
   //Validate required parameters
   useEffect(() => {
     if (!name || !email || !password) {
-      toast.error("Required signup data is missing. Please try again.");
+      showErrorToast("Required signup data is missing. Please try again.");
       router.back();
     }
   }, [name, email, password, router]);
@@ -93,30 +93,30 @@ export default function SignupOtp() {
 
       if (isAxiosError(error)) {
         if (!error.response) {
-          toast.error("Network error. Please check your connection!");
+          showErrorToast("Network error. Please check your connection!");
           return;
         }
         //handle different status codes
         const status = error?.response?.status;
         const errorData = error?.response?.data;
         if (status === 400 || status === 422) {
-          toast.error(errorData?.message || "Invalid OTP or signup data");
+          showErrorToast(errorData?.message || "Invalid OTP or signup data");
         } else if (status === 404) {
-          toast.error(errorData?.message || "OTP expired or not found");
+          showErrorToast(errorData?.message || "OTP expired or not found");
         } else if (status === 409) {
-          toast.error(
+          showErrorToast(
             errorData?.message || "User already exist with this email",
           );
         } else if (status === 429) {
-          toast.error(
+          showErrorToast(
             errorData?.message || "Too many requests. Please try again later.",
           );
         } else if (status >= 500) {
-          toast.error(
+          showErrorToast(
             errorData?.message || "Server error. Please try again later!",
           );
         } else {
-          toast.error("An unexpected error occurred. Please try again.");
+          showErrorToast("An unexpected error occurred. Please try again.");
         }
         return;
       }
@@ -139,46 +139,46 @@ export default function SignupOtp() {
       console.error("Resend OTP Error:", error);
       if (isAxiosError(error)) {
         if (!error.response) {
-          toast.error("Network error. Please check your connection!");
+          showErrorToast("Network error. Please check your connection!");
           return;
         }
         const status = error.response.status;
         const errorData = error.response.data;
         if (status === 400 || status === 422) {
-          toast.error(errorData?.message || "Invalid email address");
+          showErrorToast(errorData?.message || "Invalid email address");
         } else if (status === 429) {
-          toast.error(
+          showErrorToast(
             errorData?.message || "Too many requests. Please try again later.",
           );
         } else if (status >= 500) {
-          toast.error(
+          showErrorToast(
             errorData?.message || "Server error. Please try again later!",
           );
         } else {
-          toast.error(errorData?.message || "Failed to resend OTP");
+          showErrorToast(errorData?.message || "Failed to resend OTP");
         }
         return;
       }
-      toast.error("An error occurred while resending OTP. Please try again.");
+      showErrorToast("An error occurred while resending OTP. Please try again.");
     }
   };
 
   const verifyOTPMutation = useMutation({
     mutationFn: verifyOtp,
     onSuccess: (data) => {
-      toast.success(`Account created successfully for ${name}!`);
+      showSuccessToast(`Account created successfully for ${name}!`);
       // Navigate to next screen on success
-      router.replace("/(routes)/login");
+      router.replace("/login");
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Verification Failed");
+      showErrorToast(error.message || "Verification Failed");
     },
   });
 
   const resendOTPMutation = useMutation({
     mutationFn: resendOtp,
     onSuccess: (data) => {
-      toast.success(
+      showSuccessToast(
         `A new OTP has been sent to ${email}. Please check your inbox.`,
       );
       //Clear current OTP and restart countdown
@@ -187,7 +187,7 @@ export default function SignupOtp() {
       setCountdown(60);
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Resend OTP Failed");
+      showErrorToast(error.message || "Resend OTP Failed");
     },
   });
 
@@ -215,11 +215,11 @@ export default function SignupOtp() {
   const handleVerifyOtp = () => {
     const otpCode = otp.join("");
     if (otpCode.length !== 4) {
-      toast.error("Please enter a 4-digit OTP.");
+      showErrorToast("Please enter a 4-digit OTP.");
       return;
     }
     if (!name || !email || !password) {
-      toast.error("Required signup data is missing. Please try again.");
+      showErrorToast("Required signup data is missing. Please try again.");
       return;
     }
     // Trigger the verification mutation with all signup data
@@ -234,7 +234,7 @@ export default function SignupOtp() {
   const handleResendOTP = () => {
     if (!canResend || resendOTPMutation.isPending) return;
     if (!email) {
-      toast.error("Email address is required to resend OTP.");
+      showErrorToast("Email address is required to resend OTP.");
       return;
     }
 

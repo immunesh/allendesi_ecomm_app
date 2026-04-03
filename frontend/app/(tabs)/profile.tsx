@@ -161,7 +161,7 @@ export default function Profile() {
       await deleteStoredItem("user");
       await deleteStoredItem("accessToken");
       await deleteStoredItem("refreshToken");
-      router.replace("/(routes)/login");
+      router.replace("/login");
     } catch (error) {
       console.error("Logout error:", error);
       Toast.show({ type: "error", text1: "Logout failed. Please try again." });
@@ -563,7 +563,7 @@ export default function Profile() {
       iconBg: "#dbeafe",
       onPress: () => {
         // Navigate to Orders Screen
-        router.push("/(routes)/my-orders");
+        router.push("/my-orders");
       },
     },
     {
@@ -575,7 +575,7 @@ export default function Profile() {
       iconBg: "#d1fae5",
       onPress: () => {
         // Navigate to Inbox Screen
-        router.push("/(tabs)/messages");
+        router.push("/messages");
       },
     },
     {
@@ -586,7 +586,7 @@ export default function Profile() {
       iconColor: "D97706",
       iconBg: "#FEF3C7",
       onPress: () => {
-        router.push("/(routes)/notifications");
+        router.push("/notifications");
       },
     },
     {
@@ -597,7 +597,7 @@ export default function Profile() {
       iconColor: "#7C3AED",
       iconBg: "#EDE9FE",
       onPress: () => {
-        router.push("/(routes)/shipping");
+        router.push("/shipping");
       },
     },
     {
@@ -607,7 +607,7 @@ export default function Profile() {
       icon: "lock-closed-outline",
       iconColor: "#DC2626",
       iconBg: "#FEE2E2",
-      onPress: () => router.push("/(routes)/change-password"),
+      onPress: () => router.push("/change-password"),
     },
     {
       id: "settings",
@@ -616,7 +616,7 @@ export default function Profile() {
       icon: "settings-outline",
       iconColor: "#6B7280",
       iconBg: "#F3F4F6",
-      onPress: () => router.push("/(routes)/settings"),
+      onPress: () => router.push("/settings"),
     },
   ];
 

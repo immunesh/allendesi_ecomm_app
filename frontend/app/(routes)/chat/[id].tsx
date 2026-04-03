@@ -1,14 +1,30 @@
- import { router, useLocalSearchParams } from "@/.expo/types/router";
+ // import { router, useLocalSearchParams } from "@/.expo/types/router"; // broken path for production
+import { useLocalSearchParams, useRouter } from "expo-router";
+import useUser from "@/hooks/useUser"; // previously missing import
 import { useConversation } from "@/context/conversation.context";
-import { useConversation } from "@/context/conversation.context";
-import { use, { useState }WebSocket } from "@/context/web-socket.context";
-import React, { useEffect, useState } from "react";
-import { Platform, SafeAreaView, Text, TextInput, View } from "react-native";
 import { useWebSocket } from "@/context/web-socket.context";
-import { useWebSocket } from "@/context/web-socket.context";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Platform,
+  StatusBar,
+  Text,
+  TextInput,
+  View,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/utils/axiosInstance";
-import { useQuery } from "@tanstack/react-query";
-import messages from "@/app/(tabs)/messages";
+// import messages from "@/app/(tabs)/messages"; // commented out to avoid name clash with query results
+import EmojiPicker from "rn-emoji-selector";
+import { emojis } from "rn-emoji-selector/dist/data";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import Toast from "react-native-toast-message";
 
 interface Conversation {
   conversationId: string;
@@ -36,16 +52,17 @@ interface ChatMessage {
 
 
 export default function ChatDetails() {
+  const router = useRouter(); // added correct router hook
   const { id: conversationId } = useLocalSearchParams();
   const { user } = useUser();
-const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 const scrollViewRef = useRef<ScrollView>(null);
 const messageInputRef = useRef<TextInput>(null);
 const {ws} = useWebSocket();
 const {setSelectedConversationId} = useConversation();
 
 const [messageText, setMessageText] = useState("");
-const [hasMore, setHasMore] = useState(true);
+const [hasMore, setHasMore] = useState(false);
 const [page, setPage] = useState(1);
 const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
 const [isUploading, setIsUploading] = useState(false);
@@ -156,7 +173,7 @@ useEffect(() => {
 }, [messages]);
 
 
-// Mark conversation as seen when entering
+// Mark conversation as seen when entering and notify websocket
 useEffect(() => {
   if (conversationId && currentConversation) {
     // Mark as seen
@@ -167,17 +184,16 @@ useEffect(() => {
           : conv
       )
     );
-  }
-}, [conversationId, currentConversation]);
 
-// Send WebSocket message to mark as seen
-ws?.send(
-  JSON.stringify({
-    type: "MARK_AS_SEEN",
-    conversationId: conversationId,
-  })
-);
-}}, [currentConversation, queryClient, ws, conversationId]);
+    // Send WebSocket message to mark as seen
+    ws?.send(
+      JSON.stringify({
+        type: "MARK_AS_SEEN",
+        conversationId: conversationId,
+      })
+    );
+  }
+}, [conversationId, currentConversation, queryClient, ws]);
 
 
 const scrollToBottom = () => {
@@ -213,7 +229,7 @@ const pickImage = async () => {
       await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (status !== "granted") {
-     toast.error(
+     showErrorToast(
          "Please grant permission to access your photo library"
       );
       return;
@@ -230,11 +246,12 @@ const result = await ImagePicker.launchImageLibraryAsync({
 
 if (!result.canceled && result.assets[0]) {
   await handleImageUpload(result.assets[0].uri);
-} catch (error) {
-  console.error('Error picking image:', error);
-  toast.error('Failed to pick image');
 }
-  };
+  } catch (error) {
+    console.error('Error picking image:', error);
+    showErrorToast('Failed to pick image');
+  }
+};
 
   const handleImageUpload = async (imageUri: string) => {
   if (!conversationId || !currentConversation) return;
@@ -301,11 +318,11 @@ queryClient.setQueryData(["conversations"], (old: any = []) =>
 );
 
 scrollToBottom();
-toast.success('Image sent successfully');
+showSuccessToast('Image sent successfully');
 
 } catch (error) {
   console.error('Error uploading image:', error);
-toast.error('Failed to send image');
+showErrorToast('Failed to send image');
 } finally {
   setIsUploading(false);
 }
@@ -329,6 +346,9 @@ const handleSendMessage = async () => {
   //clear input immediately
   setMessageText("");
 };
+
+
+
 
 const handleEmojiSelect = (emoji: any) => {
   setMessageText((prev) => prev + emoji.emoji);
@@ -370,7 +390,7 @@ if (!currentConversation) {
 </View>
 </SafeAreaView>
   );
-
+}
 
   return (
   <SafeAreaView edges={["bottom"]} className="flex-1 pt-12 bg-white">
@@ -518,7 +538,85 @@ if (!currentConversation) {
   <Ionicons name="send" size={18} color="white" />
 </TouchableOpacity>
 </View>
+
+
+<View className="flex-1">
+  <EmojiPicker
+    emojis={emojis}
+    recent={recentEmojis}
+    autoFocus={false}
+    loading={false}
+    darkMode={false}
+    perLine={7}
+    onSelect={handleEmojiSelect}
+    onChangeRecent={setRecentEmojis}
+    backgroundColor={"#ffffff"}
+    enabledCategories={[
+      "recent",
+      "emotion",
+      "emojis",
+        "activities",
+      "flags",
+      "food",
+      "places",
+      "nature",
+    ]}
+    defaultCategory={"emotion"}
+  />
+
+</View>
 </KeyboardAvoidingView>
+
+
+ 
+<Modal     
+  visible={showEmojiPicker}
+  transparent={true}
+  animationType="slide"
+  onRequestClose={() => setShowEmojiPicker(false)}
+>
+  <View className="flex-1 bg-black/50">
+  <View className="flex-1 mt-20 bg-white rounded-t-3xl">
+    <View className="flex-row items-center justify-between p-4 border-b">
+  <Text className="text-lg font-poppins-semibold text-gray-900">
+    Choose Emoji
+  </Text>
+
+  <TouchableOpacity onPress={() => setShowEmojiPicker(false)}>
+    <Ionicons name="close" size={24} color="#6B7280" />
+  </TouchableOpacity>
+</View>
+  <View className="flex-1">
+  <EmojiPicker
+    emojis={emojis}
+    recent={recentEmojis}
+    autoFocus={false}
+    loading={false}
+    darkMode={false}
+    perLine={7}
+    onSelect={handleEmojiSelect}
+    onChangeRecent={setRecentEmojis}
+    backgroundColor={"#ffffff"}
+    enabledCategories={[
+      "recent",
+      "emotion",
+      "emojis",
+        "activities",
+      "flags",
+      "food",
+      "places",
+      "nature",
+    ]}
+    defaultCategory={"emotion"}
+  />
+
+</View>
+</View>
+</View>
+
+</Modal>
+
+
 </SafeAreaView> 
   );
 }

@@ -21,9 +21,24 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { toast } from "react-toastify";
+import Toast from "react-native-toast-message";
 
 WebBrowser.maybeCompleteAuthSession({ skipRedirectCheck: true });
+
+// Toast helper function
+const showErrorToast = (message: string) => {
+  Toast.show({
+    type: "error",
+    text1: message,
+  });
+};
+
+const showSuccessToast = (message: string) => {
+  Toast.show({
+    type: "success",
+    text1: message,
+  });
+};
 
 interface LoginFormData {
   email: string;
@@ -87,8 +102,8 @@ export default function LoginScreen() {
   const googleWebRedirectOverride =
     process.env.EXPO_PUBLIC_GOOGLE_WEB_REDIRECT_URI;
   const googleRedirectUri =
-    Platform.OS === "web" && typeof window !== "undefined"
-      ? googleWebRedirectOverride || window.location.origin
+    Platform.OS === "web" && typeof window !== "undefined" && window.location
+      ? googleWebRedirectOverride || "http://localhost:8081"
       : makeRedirectUri({
           preferLocalhost: true,
         });
@@ -145,10 +160,10 @@ export default function LoginScreen() {
     },
     onSuccess: async (data) => {
       if (!data?.user || !data?.accessToken) {
-        toast.error("Login response is incomplete");
+        showErrorToast("Login response is incomplete");
         return;
       }
-      toast.success("Login successful!");
+      showSuccessToast("Login successful!");
       const user = {
         id: data.user.id,
         name: data.user.name,
@@ -159,10 +174,10 @@ export default function LoginScreen() {
       if (data.accessToken) await storeAccessToken(data.accessToken);
       if (data.refreshToken)
         await setStoredItem("refreshToken", data.refreshToken);
-      router.replace("/(tabs)");
+      router.replace("/");
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Social login failed");
+      showErrorToast(error?.message || "Social login failed");
     },
   });
 
@@ -175,7 +190,7 @@ export default function LoginScreen() {
       if (accessToken) {
         socialLoginMutation.mutate({ provider: "google", accessToken });
       } else {
-        toast.error("Google sign-in failed. Please try again.");
+        showErrorToast("Google sign-in failed. Please try again.");
       }
       return;
     }
@@ -187,7 +202,7 @@ export default function LoginScreen() {
         responseParams?.error_description ||
         responseParams?.error ||
         `Google sign-in ${googleResponse.type}`;
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleResponse]);
@@ -201,7 +216,7 @@ export default function LoginScreen() {
       if (accessToken) {
         socialLoginMutation.mutate({ provider: "facebook", accessToken });
       } else {
-        toast.error("Facebook sign-in failed. Please try again.");
+        showErrorToast("Facebook sign-in failed. Please try again.");
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -234,11 +249,11 @@ export default function LoginScreen() {
     mutationFn: loginUser,
     onSuccess: async (data) => {
       if (!data?.user || !data?.accessToken) {
-        toast.error("Login response is incomplete");
+        showErrorToast("Login response is incomplete");
         return;
       }
 
-      toast.success("Login successful!");
+      showSuccessToast("Login successful!");
 
       const user = {
         id: data?.user?.id,
@@ -260,7 +275,7 @@ export default function LoginScreen() {
       router.replace("/");
     },
     onError: (error: any) => {
-      toast.error(error?.message);
+      showErrorToast(error?.message);
     },
   });
 
@@ -442,12 +457,12 @@ export default function LoginScreen() {
               className="flex-row items-center mb-4 justify-center bg-white border border-gray-200 rounded-xl py-4"
               onPress={() => {
                 if (!googleWebClientId) {
-                  toast.error("Google web client ID is missing in frontend/.env");
+                  showErrorToast("Google web client ID is missing in frontend/.env");
                   return;
                 }
 
                 if (!googleRequest) {
-                  toast.error(
+                  showErrorToast(
                     "Google auth is not ready yet. Please refresh and try again.",
                   );
                   return;
@@ -461,12 +476,12 @@ export default function LoginScreen() {
                     clientId: googleWebClientId,
                     redirectUri: googleRedirectUri,
                   });
-                  window.location.assign(authUrl);
+                  WebBrowser.openBrowserAsync(authUrl);
                   return;
                 }
 
                 promptGoogleAsync().catch(() => {
-                  toast.error("Google popup failed to open. Please try again.");
+                  showErrorToast("Google popup failed to open. Please try again.");
                 });
               }}
               disabled={

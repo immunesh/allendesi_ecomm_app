@@ -2,13 +2,17 @@ import useUser from "@/hooks/useUser";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 import Toast from "react-native-toast-message";
+import { WebSocketProvider } from "@/context/web-socket.context";
+import { ConversationProvider } from "@/context/conversation.context";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient();
   return (
     <QueryClientProvider client={queryClient}>
+      <ProvidersWithWebSocket>
       {children}
       <Toast position="bottom" />
+      </ProvidersWithWebSocket>
     </QueryClientProvider>
   );
 }
@@ -29,7 +33,7 @@ const ProvidersWithWebSocket = ({
         </ConversationProvider>
       </WebSocketProvider>
     )}
-
+ 
     {!user && (
       <ConversationProvider>
         {children}
@@ -37,3 +41,4 @@ const ProvidersWithWebSocket = ({
     )}
   </>
 );
+}

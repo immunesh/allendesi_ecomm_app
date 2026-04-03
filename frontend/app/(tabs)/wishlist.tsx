@@ -23,14 +23,12 @@ export default function Wishlist() {
       slug: product.slug,
       quantity: 1,
     },null,null,"Mobile App");
-    router.push("/(tabs)/cart");
+    router.push("/cart");
   };
 
   const handleProductPress = (product: any) => {
-    router.push({
-      pathname: "/(routes)/product/[id]",
-      params: { id: product.slug }
-    });
+    const productId = product.slug || product.id;
+    router.push(`/product/${productId}`);
   };
 
      if(wishlist.length === 0){
@@ -56,7 +54,7 @@ export default function Wishlist() {
 
 <TouchableOpacity 
 className="bg-blue-600 px-8 py-4 rounded-xl"
-onPress={()=>router.push("/(tabs)")}
+onPress={()=>router.push("/")}
 >
     <Text className="text-white font-poppins-semibold text-lg">Start Shopping</Text>
     </TouchableOpacity>

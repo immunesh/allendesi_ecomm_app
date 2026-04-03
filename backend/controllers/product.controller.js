@@ -113,7 +113,69 @@ const getTopShops = async (req, res) => {
   }
 };
 
+const getProductById = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ success: false, message: "Product id is required" });
+  }
+
+  try {
+    const [rows] = await pool.execute(
+      `
+      SELECT
+        p.id,
+        p.title,
+        p.regular_price,
+        p.sale_price,
+        p.ratings,
+        p.description,
+        s.id AS shop_id,
+        s.name AS shop_name,
+        s.avatar AS shop_avatar,
+        s.rating AS shop_rating,
+        GROUP_CONCAT(pi.url) AS image_urls,
+        GROUP_CONCAT(pi.file_id) AS image_file_ids
+      FROM products p
+      JOIN shops s ON s.id = p.shop_id
+      LEFT JOIN product_images pi ON pi.product_id = p.id
+      WHERE p.id = ? OR p.slug = ?
+      GROUP BY p.id, p.title, p.regular_price, p.sale_price, p.ratings, p.description, s.id, s.name, s.avatar, s.rating
+      `,
+      [id, id],
+    );
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    const product = rows[0];
+    const images = product.image_urls
+      ? product.image_urls.split(",").map((url) => ({ url }))
+      : [{ url: getFallbackProductImage(product.id) }];
+
+    const mappedProduct = {
+      ...mapProductRow({
+        ...product,
+        image_url: images[0]?.url,
+        image_file_id: product.image_file_ids?.split(",")[0] || "",
+      }),
+      description: product.description,
+      images,
+    };
+
+    return res.status(200).json({ success: true, product: mappedProduct });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch product",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllProducts,
+  getProductById,
   getTopShops,
 };

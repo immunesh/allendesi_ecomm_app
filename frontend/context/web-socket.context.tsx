@@ -1,8 +1,5 @@
-"use client";
-
 import React, {
   createContext,
-  use,
   useContext,
   useEffect,
   useRef,
@@ -23,45 +20,67 @@ export const WebSocketProvider = ({
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
-  if (!user?.id) return;
+    if (!user?.id) {
+      setWsReady(true); // Mark as ready even without user
+      return;
+    }
 
-  const ws = new WebSocket(
-    process.env.EXPO_PUBLIC_CHATTING_WEBSOCKET_URI! || "ws://localhost:6006"
+    try {
+      const ws = new WebSocket(
+        process.env.EXPO_PUBLIC_CHATTING_WEBSOCKET_URI || "ws://localhost:6006"
+      );
+
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        ws.send(`user_${user.id}`);
+        setWsReady(true);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          if (data.type === "UNSEEN_COUNT_UPDATE") {
+            const { conversationId, count } = data.payload;
+
+            setUnreadCounts((prev) => ({
+              ...prev,
+              [conversationId]: count,
+            }));
+          }
+        } catch (e) {
+          console.log("Failed to parse websocket message:", e);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.log("WebSocket error:", error);
+        setWsReady(true); // Mark as ready even on error
+      };
+
+      ws.onclose = () => {
+        console.log("WebSocket closed");
+      };
+
+      return () => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      };
+    } catch (error) {
+      console.log("WebSocket initialization error:", error);
+      setWsReady(true); // Mark as ready even if initialization fails
+    }
+  }, [user?.id]);
+
+  return (
+    <WebSocketContext.Provider
+      value={{ ws: wsRef.current, unreadCounts, wsReady }}
+    >
+      {children}
+    </WebSocketContext.Provider>
   );
-
-  wsRef.current = ws;
-
-  ws.onopen = () => {
-    ws.send(`user_${user.id}`);
-    setWsReady(true);
-  };
-
-  ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-
-  if (data.type === "UNSEEN_COUNT_UPDATE") {
-    const { conversationId, count } = data.payload;
-
-    setUnreadCounts((prev) => ({
-      ...prev,
-      [conversationId]: count,
-    }));
-  }
 };
 
-return () => {
-  ws.close();
-};
-}, [user?.id]);
-
-if(!wsReady) return null;
-
-return (
-  <WebSocketContext.Provider
-    value={{ ws: wsRef.current, unreadCounts }}
-  >
-    {children}
-  </WebSocketContext.Provider>
-);
-};
-export const useWebSocket = () =>  useContext(WebSocketContext);
+export const useWebSocket = () => useContext(WebSocketContext);

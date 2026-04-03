@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useStore } from "@/store";
 import { ScrollView, StatusBar, Text, TouchableOpacity, View, Image, TextInput } from "react-native";
-import { toast } from "react-toastify";
+import Toast from "react-native-toast-message";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,7 +14,7 @@ export default function Cart() {
  
   const handleRemoveFromCart = (productId: string) => {
     removeFromCart(productId, null ,null, "Mobile App");
-    toast.success("Product removed from cart");
+    showSuccessToast("Product removed from cart");
   };
 
   const handleUpdateQuantity = (product: any, newQuantity: number) => {
@@ -37,10 +37,8 @@ addToCart({
   };
 
   const handleProductPress = (product: any) => {
-    router.push({
-      pathname: "/(routes)/product/[id]",
-      params: { id: product.slug }
-    });
+    const productId = product.slug || product.id;
+    router.push(`/product/${productId}`);
   }
 
   const calculateSubtotal = () => {
@@ -72,7 +70,7 @@ if(cart.length === 0){
 </Text>
 <TouchableOpacity
 className="bg-blue-600 px-8 py-4 rounded-xl"
-onPress={()=>router.push("/(tabs)")}
+onPress={()=>router.push("/")}
 >
     <Text className="text-white font-poppins-semibold text-lg">Start Shopping</Text>
 </TouchableOpacity>

@@ -1,9 +1,12 @@
-import { router } from "@/.expo/types/router";
+// import { router } from "@/.expo/types/router"; // deprecated path, replaced with expo-router
+import { useLocalSearchParams, useRouter } from "expo-router";
 import axiosInstance from "@/utils/axiosInstance";
 import Ionicons from "@expo/vector-icons/build/Ionicons";
-import React, { useState } from "react";
-import { Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { StatusBar, Text, TextInput, View, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
+import { useQuery } from "@tanstack/react-query";
 
 interface Conversation {
   conversationId: string;
@@ -19,6 +22,7 @@ interface Conversation {
 }
 
 export default function Messages() {
+  const router = useRouter();
   const { id: conversationId } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -68,7 +72,7 @@ const filteredConversations =
  
 const handleChatSelect = (chat: Conversation) => {
   // Navigate to dedicated chat screen
-  router.push(`/(routes)/chat/${chat.conversationId}`);
+  router.push(`/chat/${chat.conversationId}`);
 };
 
 const toggleSearch = () => {
@@ -105,7 +109,7 @@ const formatTimestamp = (timestamp: string) => {
 
   return (
    <SafeAreaView edges={["bottom"]} className="flex-1 pt-12 bg-white">
-  <StatusBar style="dark-content" backgroundColor="#ffffff" />
+  <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
   {/* Header */}
 <View className="bg-white px-4 py-4 border-b border-gray-100">
@@ -125,7 +129,7 @@ const formatTimestamp = (timestamp: string) => {
 </TouchableOpacity>
 </View>
 
-/* Search Input */
+ 
 {isSearchVisible && (
   <View className="mt-4">
     <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2">
@@ -151,7 +155,7 @@ const formatTimestamp = (timestamp: string) => {
 </View>
 
 
-/* Content */
+ 
 <View className="flex-1">
   {isLoading ? (
     <View className="flex-1 justify-center items-center">
@@ -209,39 +213,36 @@ const formatTimestamp = (timestamp: string) => {
 ))}
 
   </ScrollView>
-  
-) : ( searchQuery.trim()? 
+) : searchQuery.trim() ? (
 
-<View className="flex-1 justify-center items-center px-4">
-  <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
-    <Ionicons name="search-outline" size={40} color="#9CA3AF" />
-  </View>
-
-  <Text className="text-gray-900 font-poppins-semibold text-xl mt-4 text-center mb-2">
-    No Results Found
-  </Text>
-
-  <Text className="text-gray-500 font-poppins-medium text-center mt-2">
-    No conversations match "{searchQuery}"
-  </Text>
-</View>
-) :(
-  
   <View className="flex-1 justify-center items-center px-4">
-  <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
-    <Ionicons name="chatbubbles-outline" size={40} color="#9CA3AF" />
+    <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+      <Ionicons name="search-outline" size={40} color="#9CA3AF" />
+    </View>
+
+    <Text className="text-gray-900 font-poppins-semibold text-xl mt-4 text-center mb-2">
+      No Results Found
+    </Text>
+
+    <Text className="text-gray-500 font-poppins-medium text-center mt-2">
+      No conversations match "{searchQuery}"
+    </Text>
   </View>
+) : (
 
-  <Text className="text-gray-900 font-poppins-semibold text-xl text-center mb-2">
-    No Messages Yet
-  </Text>
+  <View className="flex-1 justify-center items-center px-4">
+    <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+      <Ionicons name="chatbubbles-outline" size={40} color="#9CA3AF" />
+    </View>
 
-  <Text className="text-gray-500 font-poppins-medium text-center ">
-    Start a conversation with sellers to see your messages here
-  </Text>
-</View>
+    <Text className="text-gray-900 font-poppins-semibold text-xl text-center mb-2">
+      No Messages Yet
+    </Text>
 
-)
+    <Text className="text-gray-500 font-poppins-medium text-center ">
+      Start a conversation with sellers to see your messages here
+    </Text>
+  </View>
 )}
   </View>
 </SafeAreaView>

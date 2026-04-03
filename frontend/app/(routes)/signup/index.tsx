@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { toast } from "react-toastify";
+import Toast from "react-native-toast-message";
 
 interface SignupFormData {
   name: string;
@@ -80,7 +80,7 @@ export default function SignupScreen() {
     mutationFn: signupUser,
     onSuccess: (data, variables) => {
       router.replace({
-        pathname: "/(routes)/signup-otp",
+        pathname: "/signup-otp",
         params: {
           name: variables.name,
           email: variables?.email,
@@ -89,7 +89,7 @@ export default function SignupScreen() {
       });
     },
     onError: (error) => {
-      toast.error(error?.message);
+      showErrorToast(error?.message);
     },
   });
 
@@ -99,7 +99,7 @@ export default function SignupScreen() {
   };
 
   const handleSignInNavigation = () => {
-    router.push("/(routes)/login");
+    router.push("/login");
   };
   return (
     <SafeAreaView className="flex-1 bg-white">

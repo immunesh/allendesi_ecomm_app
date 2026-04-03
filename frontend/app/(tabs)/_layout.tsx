@@ -5,6 +5,7 @@ import { Tabs } from "expo-router";
 import React, { ReactNode } from "react";
 import { Platform, useColorScheme, View, Text } from "react-native";
 import { useStore } from "@/store";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages"; // added missing hook import
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();

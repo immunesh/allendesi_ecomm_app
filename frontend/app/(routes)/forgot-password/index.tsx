@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { toast } from "react-toastify";
+import Toast from "react-native-toast-message";
 
 interface ForgotPasswordFormData {
   email: string;
@@ -57,14 +57,14 @@ export default function ForgotPasswordScreen() {
       setIsSubmitted(true);
       setSubmittedEmail(variables.email);
       setResetToken(data?.resetToken || null);
-      toast.success("Reset link request sent");
+      showSuccessToast("Reset link request sent");
     },
     onError: (error) => {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Failed to send reset link");
+        showErrorToast(error.response?.data?.message || "Failed to send reset link");
         return;
       }
-      toast.error("Failed to send reset link");
+      showErrorToast("Failed to send reset link");
     },
   });
 
@@ -76,14 +76,14 @@ export default function ForgotPasswordScreen() {
       return response.data;
     },
     onSuccess: (data) => {
-      toast.success(data?.message || "SMTP is configured correctly");
+      showSuccessToast(data?.message || "SMTP is configured correctly");
     },
     onError: (error) => {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "SMTP verification failed");
+        showErrorToast(error.response?.data?.message || "SMTP verification failed");
         return;
       }
-      toast.error("SMTP verification failed");
+      showErrorToast("SMTP verification failed");
     },
   });
 
@@ -151,7 +151,7 @@ export default function ForgotPasswordScreen() {
             onPress={() => {
               const email = submittedEmail || forgotPasswordForm.getValues("email");
               router.push({
-                pathname: "/(routes)/change-password",
+                pathname: "/change-password",
                 params: {
                   email,
                   token: resetToken,

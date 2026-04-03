@@ -5,7 +5,7 @@ import { useStore } from "@/store";
 import React, { useState } from "react";
 import { Image, Platform, Text, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { toast } from "react-toastify";
+import Toast from "react-native-toast-message";
 
 export default function ProductSection({
   title,
@@ -20,17 +20,15 @@ export default function ProductSection({
   const {wishlist,addToWishlist,removeFromWishlist} = useStore();
 
   const handleProductPress = (product: any) => {
-    router.push({
-      pathname: "/(routes)/product/[id]",
-      params: { id: product.slug }
-    });
+    const productId = product.id;
+    router.push(`/product/${productId}`);
   };
 
   const handleWishlistToggle = (product: any, e: any) => {
     e.stopPropagation();
     
     if(!user){
-      toast.error("Please login to add products to wishlist");
+      showErrorToast("Please login to add products to wishlist");
       return;
     }
 
@@ -83,7 +81,7 @@ export default function ProductSection({
           )}
           <TouchableOpacity
             className="flex-row items-center bg-blue-50 px-3 py-2 rounded-full"
-            onPress={() => router.push("/(routes)/products")}
+            onPress={() => router.push("/products")}
           >
             <Text className="text-blue-600 font-semibold mr-1 text-sm">
               See All
