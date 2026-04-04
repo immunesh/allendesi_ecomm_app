@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import ShopCard from "@/components/cards/shop.card";
 import BigSaleBanner from "@/components/home/banner";
 import Header from "@/components/home/header";
@@ -21,6 +22,7 @@ import useUser from "@/hooks/useUser";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Index() {
+  const router = useRouter();
   const { user } = useUser();
 
   const fetchProducts = async () => {
@@ -65,8 +67,7 @@ export default function Index() {
   });
 
   const onShopPress = (shop: any) => {
-    // Keep handler in place for future navigation action.
-    console.log("Shop pressed:", shop?.id);
+    router.push(`/shop/${shop.id}` as any);
   };
 
   console.log(products);

@@ -31,6 +31,7 @@ type Store ={
         location:any,
         deviceInfo:any
     ) => void;
+    clearCart: () =>void;
   
     addToWishlist:(
         product:Product,
@@ -97,6 +98,11 @@ export const useStore = create<Store>()(
                 ...state,
                 cart: state.cart.filter((item) => item.id !== id),
             }));
+
+//clear cart
+clearCart: () =>{
+    set({cart: []});
+},
 
             //send event to kafka
             if(user?.id && location && deviceInfo){

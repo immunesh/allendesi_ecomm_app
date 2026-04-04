@@ -9,7 +9,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import Providers from "../config/providers";
 import "../global.css";
+import {LogBox} from "react-native";
+
 export default function RootLayout() {
+  LogoBox.ignoreAllLogs();
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_600SemiBold,
@@ -19,7 +22,7 @@ export default function RootLayout() {
     return (
       <GestureHandlerRootView style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <StatusBar style="auto" />
-      </GestureHandlerRootView>
+      </GestureHandlerRootView> 
     );
   }
 
