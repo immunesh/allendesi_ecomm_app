@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { useStore } from "@/store";
-import { ScrollView, StatusBar, Text, TouchableOpacity, View, Image, TextInput } from "react-native";
+import { useCart } from "@/store";
+import { ScrollView, StatusBar, Text, TouchableOpacity, View, Image, TextInput, Modal } from "react-native";
 import Toast from "react-native-toast-message";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
+import { axiosInstance } from "@/utils/axiosInstance";
+import { toast } from "sonner-native";
 
 interface Address {
   id: string;
@@ -23,7 +27,7 @@ export default function Cart() {
   const { cart, removeFromCart, addToCart } = useCart();
 
 const [couponCode, setCouponCode] = useState("");
-const [selectedAddress, setSelectedAddress] = useState<Address | null >;
+const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 const [showAddressModal, setShowAddressModal] = useState(false);
 const [storedCouponCode, setStoredCouponCode] = useState("");
 const [discountAmount, setDiscountAmount] = useState(0);
@@ -62,7 +66,7 @@ React.useEffect(() => {
 
   const handleRemoveFromCart = (productId: string) => {
     removeFromCart(productId, null ,null, "Mobile App");
-    showSuccessToast("Product removed from cart");
+    toast.success("Product removed from cart");
   };
 
   const handleUpdateQuantity = (product: any, newQuantity: number) => {
@@ -95,34 +99,34 @@ const couponCodeApplyHandler = async () => {
     setCouponError("Please enter a coupon code");
     return;
   }
-};
-try {
-  const response = await axiosInstance.post("/order/api/verify-coupon", {
-    couponCode: couponCode.trim(),
-    cart: cart.map((item) => ({
-      id: item.id,
-      quantity: item.quantity || 1,
-      sale_price: item.price,
-      shopId: item.shopId, 
-    })),
-  });
 
-  const { discountAmount: discount, couponCode: validCouponCode } =
-    response.data;
+  try {
+    const response = await axiosInstance.post("/order/api/verify-coupon", {
+      couponCode: couponCode.trim(),
+      cart: cart.map((item) => ({
+        id: item.id,
+        quantity: item.quantity || 1,
+        sale_price: item.price,
+        shopId: item.shopId, 
+      })),
+    });
 
-  setDiscountAmount(discount);
-  setStoredCouponCode(validCouponCode);
-  setCouponError("");
+    const { discountAmount: discount, couponCode: validCouponCode } =
+      response.data;
 
-  toast.success(
-    `Coupon "${validCouponCode}" applied! Save: $${discount.toFixed(2)}`
-  );
-} catch (error: any) {
-  console.error("Coupon verification error:", error);
-  setCouponError(error.response?.data?.message || "Invalid coupon code");
-  setDiscountAmount(0);
-  setStoredCouponCode("");
-}
+    setDiscountAmount(discount);
+    setStoredCouponCode(validCouponCode);
+    setCouponError("");
+
+    toast.success(
+      `Coupon "${validCouponCode}" applied! Save: $${discount.toFixed(2)}`
+    );
+  } catch (error: any) {
+    console.error("Coupon verification error:", error);
+    setCouponError(error.response?.data?.message || "Invalid coupon code");
+    setDiscountAmount(0);
+    setStoredCouponCode("");
+  }
 };
 
   const calculateSubtotal = () => {
@@ -377,38 +381,39 @@ Total
     toast.error("Please select a shipping address");
     return;
   }
-try {
-  // Create payment session first
-  await axiosInstance.post(
-    "/order/api/create-payment-session",
-    {
-      cart: cart.map((item) => ({
-        id: item.id,
-        quantity: item.quantity || 1,
-        sale_price: item.price,
-        shopId: item.shopId,
-      })),
-      selectedAddressId: selectedAddress.id,
-      coupon: storedCouponCode,
-            ? { code: storedCouponCode, discountAmount }
-      : null,
-  );
-}
-   cost {sessionId} = sessionResponse.data;
-   
-// Navigate to payment screen with session ID
-router.push({
-  pathname: "/(routes)/payment",
-  params:{sessionId}
-});
-} catch (error) {
-  console.error("Error creating payment session:", error);
-  toast.error(
-    "Failed to create payment session. Please try again."
-  );
-}
- }}
 
+  try {
+    // Create payment session first
+    const response = await axiosInstance.post(
+      "/order/api/create-payment-session",
+      {
+        cart: cart.map((item) => ({
+          id: item.id,
+          quantity: item.quantity || 1,
+          sale_price: item.price,
+          shopId: item.shopId,
+        })),
+        selectedAddressId: selectedAddress.id,
+        coupon: storedCouponCode
+          ? { code: storedCouponCode, discountAmount }
+          : null,
+      }
+    );
+
+    const { sessionId } = response.data;
+   
+    // Navigate to payment screen with session ID
+    router.push({
+      pathname: "/(routes)/payment",
+      params: { sessionId }
+    });
+  } catch (error) {
+    console.error("Error creating payment session:", error);
+    toast.error(
+      "Failed to create payment session. Please try again."
+    );
+  }
+ }}
  disabled={!selectedAddress}
  > 
    <Text className="text-white font-poppins-semibold text-center">
@@ -579,26 +584,30 @@ color={
 
 {/* Add New Address */}
 <TouchableOpacity
-  className="bg-white rounded-2xl shadow-[0_0_1px_rgba(0,0,0,0.1)]"
+  className="bg-white rounded-2xl shadow-[0_0_1px_rgba(0,0,0,0.1)] p-4"
   onPress={() => {
     setShowAddressModal(false);
     router.push("/(routes)/shipping");
   }}
   activeOpacity={0.7}
 >
-  <View className="w-12 h-12 bg-blue-100 rounded-full items-center justify-center">
-    <Ionicons name="add" size={24} color="#2563EB" />
+  <View className="items-center">
+    <View className="w-12 h-12 bg-blue-100 rounded-full items-center justify-center mb-3">
+      <Ionicons name="add" size={24} color="#2563EB" />
+    </View>
+
+    <Text className="text-gray-900 font-poppins-semibold text-lg">
+      Add New Address
+    </Text>
+
+    <Text className="text-gray-500 font-poppins-medium text-center mt-2">
+      Add a new shipping address
+    </Text>
   </View>
-  </TouchableOpacity>
-
-  <Text className="text-gray-900 font-poppins-semibold text-lg">
-  Add New Address
-</Text>
-
-<Text className="text-gray-500 font-poppins-medium text-center mt-2">
-  Add a new shipping address
-</Text>
 </TouchableOpacity>
+
+</>
+)}
 
 {/* Bottom Spacing */}
 <View className="h-20" />

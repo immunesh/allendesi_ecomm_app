@@ -1,7 +1,7 @@
 import { sendKafkaEvent } from '@/actions/track-user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {create} from "zustand";
-import {createJSONStorage,persist} from "zustand/middleware.js";
+const { createJSONStorage, persist } = require("zustand/middleware");
 
 
 type Product ={
@@ -99,11 +99,6 @@ export const useStore = create<Store>()(
                 cart: state.cart.filter((item) => item.id !== id),
             }));
 
-//clear cart
-clearCart: () =>{
-    set({cart: []});
-},
-
             //send event to kafka
             if(user?.id && location && deviceInfo){
                 sendKafkaEvent({
@@ -116,6 +111,11 @@ clearCart: () =>{
                     city:location?.city || "Unknown",
                 });
             }
+        },
+
+        //clear cart
+        clearCart: () =>{
+            set({cart: []});
         },
         
         //add to wishlist
@@ -170,3 +170,5 @@ clearCart: () =>{
     }
 )
 );  
+
+export const useCart = useStore;

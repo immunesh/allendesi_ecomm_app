@@ -125,26 +125,26 @@ const openTermsConditions = async () => {
   }
 };
 
-try {
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 2000));
+const handleDeleteAccount = async () => {
+  try {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-  // Clear all local data
-  await AsyncStorage.clear();
+    // Clear all local data
+    await AsyncStorage.clear();
 
-  toast.success("Account deleted successfully");
-  setShowDeleteModal(false);
+    toast.success("Account deleted successfully");
+    setShowDeleteModal(false);
 
-  // Navigate to login screen
-  router.replace("/(routes)/login");
-} catch (error) {
-  console.error("Error deleting account:", error);
-  toast.error("Failed to delete account");
-} finally{
-  setIsDeleting(false);
-}
+    // Navigate to login screen
+    router.replace("/(routes)/login");
+  } catch (error) {
+    console.error("Error deleting account:", error);
+    toast.error("Failed to delete account");
+  } finally {
+    setIsDeleting(false);
+  }
 };
-
 
 const confirmDeleteAccount = () => {
   Alert.alert(

@@ -1,5 +1,11 @@
-import React from "react";
-import { Text, View } from "react-native";
+import React, { useState } from "react";
+import { Text, View, TouchableOpacity, ScrollView, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { axiosInstance } from "@/utils/axiosInstance";
+import { toast } from "sonner-native";
 
 type NotificationType = "orders" | "promotions" | "system" | "chat" | "all";
 
@@ -104,26 +110,24 @@ const handleNotificationAction = async (notification: Notification) => {
   if (notification.status === "Unread") {
     await markAsRead(notification.id);
   }
-};
+  // Handle navigation
+  if (notification.type === "orders" && notification.redirect_link) {
+    // Extract order ID from redirect link
+    const orderId = notification.redirect_link.split("/").pop();
 
-// Handle navigation
-if (notification.type === "orders" && notification.redirect_link) {
-  // Extract order ID from redirect link
-  const orderId = notification.redirect_link.split("/").pop();
-
-  if (orderId) {
-    router.push({
-      pathname: "/(routes)/order-details/[id]",
-      params: { id: orderId },
-    });
+    if (orderId) {
+      router.push({
+        pathname: "/(routes)/order-details/[id]",
+        params: { id: orderId },
+      });
+    }
+  } else if (notification.type === "promotions") {
+    router.push("/(routes)/products");
+  } else if (notification.type === "chat") {
+    router.push("/(tabs)/messages");
+  } else if (notification.type === "system") {
+    router.push("/(tabs)/profile");
   }
-} else if (notification.type === "promotions") {
-router.push("/(routes)/products");
-} else if (notification.type === "chat") {
-  router.push("/(tabs)/messages");
-} else if (notification.type === "system") {
-  router.push("/(tabs)/profile");
-}
 };
 
 const handleMarkAllAsRead = async () => {

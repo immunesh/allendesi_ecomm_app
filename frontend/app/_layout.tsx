@@ -12,7 +12,7 @@ import "../global.css";
 import {LogBox} from "react-native";
 
 export default function RootLayout() {
-  LogoBox.ignoreAllLogs();
+  LogBox.ignoreAllLogs();
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_600SemiBold,
