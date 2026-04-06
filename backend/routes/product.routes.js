@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getAllProducts,
+  getProductById,
   getTopShops,
 } = require("../controllers/product.controller");
 
