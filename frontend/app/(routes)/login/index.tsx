@@ -45,25 +45,6 @@ interface LoginFormData {
   password: string;
 }
 
-const buildGoogleWebAuthUrl = ({
-  clientId,
-  redirectUri,
-}: {
-  clientId: string;
-  redirectUri: string;
-}) => {
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: "token",
-    scope: "profile email",
-    include_granted_scopes: "true",
-    prompt: "select_account",
-  });
-
-  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-};
-
 const loginUser = async (userData: LoginFormData) => {
   try {
     const reponse = await axios.post(
@@ -102,11 +83,10 @@ export default function LoginScreen() {
   const googleWebRedirectOverride =
     process.env.EXPO_PUBLIC_GOOGLE_WEB_REDIRECT_URI;
   const googleRedirectUri =
-    Platform.OS === "web" && typeof window !== "undefined" && window.location
-      ? googleWebRedirectOverride || "http://localhost:8081"
-      : makeRedirectUri({
-          preferLocalhost: true,
-        });
+    googleWebRedirectOverride ||
+    makeRedirectUri({
+      preferLocalhost: true,
+    });
 
   // ── Social auth session hooks ──────────────────────────────────────────────
   const [googleRequest, googleResponse, promptGoogleAsync] =
@@ -465,18 +445,6 @@ export default function LoginScreen() {
                   showErrorToast(
                     "Google auth is not ready yet. Please refresh and try again.",
                   );
-                  return;
-                }
-
-                if (
-                  Platform.OS === "web" &&
-                  typeof window !== "undefined"
-                ) {
-                  const authUrl = buildGoogleWebAuthUrl({
-                    clientId: googleWebClientId,
-                    redirectUri: googleRedirectUri,
-                  });
-                  WebBrowser.openBrowserAsync(authUrl);
                   return;
                 }
 

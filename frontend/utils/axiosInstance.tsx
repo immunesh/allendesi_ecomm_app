@@ -5,8 +5,11 @@ import {
   getStoredItem,
   setStoredItem,
 } from "./storage";
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_SERVER_URI || "http://localhost:5000";
+
 const axiosInstance = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_SERVER_URI,
+  baseURL: API_BASE_URL,
   withCredentials: false, //Disable cookies for React Native
 });
 
@@ -89,7 +92,7 @@ axiosInstance.interceptors.response.use(
         }
 
         const response = await axios.post(
-          `${process.env.EXPO_PUBLIC_SERVER_URI}/auth/refresh-token`,
+          `${API_BASE_URL}/auth/refresh-token`,
           { refreshToken },
 
           {

@@ -113,6 +113,140 @@ const getTopShops = async (req, res) => {
   }
 };
 
+const getFilteredProducts = async (req, res) => {
+  try {
+    const { limit, offset, page } = parsePagination(req.query);
+    const [minPriceRaw, maxPriceRaw] = String(req.query.priceRange || "0,999999")
+      .split(",")
+      .map((value) => Number(value));
+
+    const minPrice = Number.isFinite(minPriceRaw) ? minPriceRaw : 0;
+    const maxPrice = Number.isFinite(maxPriceRaw) ? maxPriceRaw : 999999;
+
+    const [countRows] = await pool.execute(
+      `
+        SELECT COUNT(*) AS total
+        FROM products p
+        WHERE COALESCE(p.sale_price, p.regular_price) BETWEEN ? AND ?
+      `,
+      [minPrice, maxPrice],
+    );
+
+    const total = Number(countRows?.[0]?.total || 0);
+
+    const [rows] = await pool.execute(
+      `
+        SELECT
+          p.id,
+          p.title,
+          p.regular_price,
+          p.sale_price,
+          p.ratings,
+          s.id AS shop_id,
+          s.name AS shop_name,
+          s.avatar AS shop_avatar,
+          s.rating AS shop_rating,
+          MIN(pi.url) AS image_url,
+          MIN(pi.file_id) AS image_file_id,
+          0 AS review_count
+        FROM products p
+        JOIN shops s ON s.id = p.shop_id
+        LEFT JOIN product_images pi ON pi.product_id = p.id
+        WHERE COALESCE(p.sale_price, p.regular_price) BETWEEN ? AND ?
+        GROUP BY
+          p.id,
+          p.title,
+          p.regular_price,
+          p.sale_price,
+          p.ratings,
+          s.id,
+          s.name,
+          s.avatar,
+          s.rating
+        ORDER BY p.created_at DESC
+        LIMIT ? OFFSET ?
+      `,
+      [minPrice, maxPrice, limit, offset],
+    );
+
+    return res.status(200).json({
+      success: true,
+      products: rows.map(mapProductRow),
+      pagination: {
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch filtered products",
+      error: error.message,
+    });
+  }
+};
+
+const searchProducts = async (req, res) => {
+  try {
+    const query = String(req.query.q || "").trim();
+
+    if (!query) {
+      return res.status(200).json({
+        success: true,
+        products: [],
+      });
+    }
+
+    const likeQuery = `%${query}%`;
+    const [rows] = await pool.execute(
+      `
+        SELECT
+          p.id,
+          p.title,
+          p.regular_price,
+          p.sale_price,
+          p.ratings,
+          s.id AS shop_id,
+          s.name AS shop_name,
+          s.avatar AS shop_avatar,
+          s.rating AS shop_rating,
+          MIN(pi.url) AS image_url,
+          MIN(pi.file_id) AS image_file_id,
+          0 AS review_count
+        FROM products p
+        JOIN shops s ON s.id = p.shop_id
+        LEFT JOIN product_images pi ON pi.product_id = p.id
+        WHERE p.title LIKE ?
+        GROUP BY
+          p.id,
+          p.title,
+          p.regular_price,
+          p.sale_price,
+          p.ratings,
+          s.id,
+          s.name,
+          s.avatar,
+          s.rating
+        ORDER BY p.created_at DESC
+        LIMIT 50
+      `,
+      [likeQuery],
+    );
+
+    return res.status(200).json({
+      success: true,
+      products: rows.map(mapProductRow),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to search products",
+      error: error.message,
+    });
+  }
+};
+
 const getProductById = async (req, res) => {
   const { id } = req.params;
 
@@ -176,6 +310,8 @@ const getProductById = async (req, res) => {
 
 module.exports = {
   getAllProducts,
+  getFilteredProducts,
   getProductById,
+  searchProducts,
   getTopShops,
 };

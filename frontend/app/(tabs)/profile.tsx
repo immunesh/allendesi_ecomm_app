@@ -14,6 +14,7 @@ export default function Profile() {
   const { user, updateUserData } = useUser();
   const [showPhotoModel, setShowPhotoModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showAIFeatures, setShowAIFeatures] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [uploadedImageId, setUploadedImageId] = useState<string>("");
   const [isUploading, setisUploading] = useState(false);
@@ -299,7 +300,7 @@ export default function Profile() {
         </View>
 
         <ScrollView className="flex-1 p-4">
-          {!selectedImage ? (
+          {!selectedImage || !showAIFeatures ? (
             //Upload Options
             <View className="gap-4 ">
               <Text

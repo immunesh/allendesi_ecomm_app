@@ -28,7 +28,10 @@ export default function ProductSection({
     e.stopPropagation();
     
     if(!user){
-      showErrorToast("Please login to add products to wishlist");
+      Toast.show({
+        type: "error",
+        text1: "Please login to add products to wishlist",
+      });
       return;
     }
 
@@ -164,12 +167,6 @@ export default function ProductSection({
                         >
                           {product.Shop?.name || "Official Store"}
                         </Text>
-                        <View className="flex-row items-center mt-0.5">
-                          <Ionicons name="star" size={10} color="#FCD34D" />
-                          <Text className="text-xs text-gray-500 ml-1 font-medium">
-                            {product.Shop?.rating}
-                          </Text>
-                        </View>
                       </View>
                       </View>
                       <Text
