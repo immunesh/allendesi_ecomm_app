@@ -1,5 +1,19 @@
-import React from "react";
-import { Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Linking,
+  ScrollView,
+  StatusBar,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { toast } from "sonner-native";
 
 interface SettingItem {
   id: string;
@@ -32,8 +46,6 @@ const DEFAULT_SETTINGS: SettingsData = {
 export default function Settings() {
   const [settingsData, setSettingsData] = useState<SettingsData>(DEFAULT_SETTINGS);
 const [isLoading, setIsLoading] = useState(true);
-const [showDeleteModal, setShowDeleteModal] = useState(false);
-const [isDeleting, setIsDeleting] = useState(false);
 
 // Load settings from AsyncStorage on component mount
 useEffect(() => {
@@ -134,15 +146,12 @@ const handleDeleteAccount = async () => {
     await AsyncStorage.clear();
 
     toast.success("Account deleted successfully");
-    setShowDeleteModal(false);
 
     // Navigate to login screen
     router.replace("/(routes)/login");
   } catch (error) {
     console.error("Error deleting account:", error);
     toast.error("Failed to delete account");
-  } finally {
-    setIsDeleting(false);
   }
 };
 
@@ -158,7 +167,7 @@ const confirmDeleteAccount = () => {
       {
         text: "Delete",
         style: "destructive",
-        onPress: () => setShowDeleteModal(true),
+        onPress: handleDeleteAccount,
       },
     ]
   );
@@ -184,6 +193,16 @@ const settings: SettingItem[] = [
   iconBg: "#D1FAE5",
   type: "toggle",
   value: settingsData.email_notifications,
+},
+{
+  id: "data_usage",
+  title: "Data Usage",
+  subtitle: "Manage local storage and cached data",
+  icon: "pie-chart-outline",
+  iconColor: "#7C3AED",
+  iconBg: "#EDE9FE",
+  type: "navigation",
+  onPress: () => router.push("/(routes)/data-usage"),
 },
 {
   id: "rate_app",
@@ -287,6 +306,10 @@ const appSettings = settings.filter(item =>
 
 const legalSettings = settings.filter(item =>
   ["privacy_policy", "terms_conditions"].includes(item.id)
+);
+
+const otherSettings = settings.filter(item =>
+  ["rate_app"].includes(item.id)
 );
 
 if (isLoading) {
